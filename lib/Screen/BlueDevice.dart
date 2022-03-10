@@ -5,12 +5,29 @@ import 'package:get/get.dart';
 
 class BlueDevice extends StatelessWidget {
   final BlueToothController blueToothController = Get.find();
+  final FlutterBlue flutterBlue = FlutterBlue.instance;
+
   final BluetoothDevice device;
 
   BlueDevice({Key? key, required this.device}) : super(key: key);
 
+  Future<List<BluetoothService>> handleGetServices() async {
+    if (blueToothController.connectedDevices.contains(device)) {
+      List<BluetoothService> services = await device.discoverServices();
+      print(services.length);
+      return services;
+    } else {
+      return <BluetoothService>[];
+    }
+  }
+
+  List<BluetoothService> services = [];
+
   @override
   Widget build(BuildContext context) {
+    handleGetServices().then((value) {
+      services = value;
+    });
     return Scaffold(
         appBar: AppBar(
           title: Text(device.name),
@@ -50,7 +67,16 @@ class BlueDevice extends StatelessWidget {
                       print('Device not connected');
                     }
                   },
-                  child: const Text('Services'))
+                  child: const Text('Services')),
+              ListView.builder(
+                itemCount: services.length,
+                itemBuilder: (context, index) {
+                  return Text(
+                    "Service UUID${services[index].isPrimary}",
+                    style: TextStyle(color: Colors.black),
+                  );
+                },
+              )
             ],
           ),
         ));
